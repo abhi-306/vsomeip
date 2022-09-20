@@ -58,6 +58,12 @@ public:
                 SAMPLE_EVENT_ID,
                 its_groups,
                 vsomeip::event_type_e::ET_FIELD);
+        app_->request_event(
+                SAMPLE_SERVICE_ID,
+                SAMPLE_INSTANCE_ID,
+                SAMPLE_EVENT_ID1,
+                its_groups,
+                vsomeip::event_type_e::ET_FIELD);
         app_->subscribe(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENTGROUP_ID);
 
         return true;
@@ -75,6 +81,7 @@ public:
         app_->clear_all_handler();
         app_->unsubscribe(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENTGROUP_ID);
         app_->release_event(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENT_ID);
+                app_->release_event(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENT_ID1);
         app_->release_service(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID);
         app_->stop();
     }

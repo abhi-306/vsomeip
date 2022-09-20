@@ -17,8 +17,12 @@
 
 #define PIN  24 /* P1-18 */
 #define POUT 4  /* P1-07 */
+#define PIN_1  23 /* P1-18 */
+#define POUT_1 17  /* P1-07 */
 	int repeat = 10;
 	int value = 0;
+	int value1 = 0;
+	
 
 static int
 GPIOExport(int pin)
@@ -155,6 +159,7 @@ GPIOWrite(int pin, int value)
 
 #include "sample-ids.hpp"
 void send_data(s_vehicle_data_t data);
+void send_data1(s_vehicle_data_t data);
 s_vehicle_data_t vdata;
 class service_sample {
 public:
@@ -189,6 +194,13 @@ public:
                 std::bind(&service_sample::on_message, this,
                           std::placeholders::_1));
 
+        app_->register_message_handler(
+                SAMPLE_SERVICE_ID,
+                SAMPLE_INSTANCE_ID,
+                SAMPLE_GET_METHOD_ID1,
+                std::bind(&service_sample::on_message, this,
+                    std::placeholders::_1));                          
+
  /*       app_->register_message_handler(
                 SAMPLE_SERVICE_ID,
                 SAMPLE_INSTANCE_ID,
@@ -209,7 +221,14 @@ public:
 //            std::lock_guard<std::mutex> its_lock(payload_mutex_);
 //            payload_ = vsomeip::runtime::get()->create_payload();
 //        }
-
+        app_->offer_event(
+                SAMPLE_SERVICE_ID,
+                SAMPLE_INSTANCE_ID,
+                SAMPLE_EVENT_ID1,
+                its_groups,
+                vsomeip::event_type_e::ET_FIELD, std::chrono::milliseconds::zero(),
+                false, true, nullptr, vsomeip::reliability_type_e::RT_UNKNOWN);
+                
         blocked_ = true;
         condition_.notify_one();
         return true;
@@ -246,6 +265,17 @@ public:
 	  app_->notify(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENT_ID, its_payload);
 
 	}
+	
+void send_data1(s_vehicle_data_t data) {
+
+	  std::shared_ptr< vsomeip::payload > its_payload = vsomeip::runtime::get()->create_payload();
+	  std::vector< vsomeip::byte_t > its_payload_data;
+	  its_payload_data.push_back(data.type);
+	   its_payload_data.push_back(data.message);
+	  its_payload->set_data(its_payload_data);
+	  app_->notify(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID, SAMPLE_EVENT_ID1, its_payload);
+
+	}	
     void offer() {
         std::lock_guard<std::mutex> its_lock(notify_mutex_);
         app_->offer_service(SAMPLE_SERVICE_ID, SAMPLE_INSTANCE_ID);
@@ -333,7 +363,9 @@ public:
 		 * Read GPIO value
 		 */
 		value = GPIORead(PIN);
+		value1 = GPIORead(PIN_1);
 		printf("I'm reading %d in GPIO %d\n", GPIORead(PIN), PIN);
+		printf("I'm reading %d in GPIO %d\n", GPIORead(PIN_1), PIN_1);
 		if(value){
 		GPIOWrite(POUT, 1);
                 vdata.message=22;
@@ -342,7 +374,15 @@ public:
 		}
 		else 
 		GPIOWrite(POUT, 0);	
-		
+
+		if(value1){
+		GPIOWrite(POUT_1, 1);
+                vdata.message=16;
+   		vdata.type=TYPE_DATA_SPEED;
+   		send_data1(vdata);		
+		}
+		else 
+		GPIOWrite(POUT_1, 0);		
 		
                 offer();
  //               std::cout << "Service: Offer Sending " << std::endl;
@@ -442,14 +482,16 @@ int main(int argc, char **argv) {
 	 */
 	if (-1 == GPIOExport(POUT) || -1 == GPIOExport(PIN))
 		return(1);
-
+	if (-1 == GPIOExport(POUT_1) || -1 == GPIOExport(PIN_1))
+		return(1);
 	/*
 	 * Set GPIO directions
 	 */
 	if (-1 == GPIODirection(POUT, OUT) || -1 == GPIODirection(PIN, IN))
 		return(2);
 
-
+	if (-1 == GPIODirection(POUT_1, OUT) || -1 == GPIODirection(PIN_1, IN))
+		return(2);
     std::string tcp_enable("--tcp");
     std::string udp_enable("--udp");
     std::string cycle_arg("--cycle");
