@@ -1,0 +1,32 @@
+
+
+git clone https://github.com/COVESA/vsomeip.git
+
+cd vsomeip
+mkdir build
+cd build
+export GTEST_ROOT=/home/shree/googletest/
+cmake ..
+make -j20
+sudo make install
+
+cmake --build . --target examples
+cmake --build . --target examples/hello_world
+
+make response-sample request-sample subscribe-sample notify-sample
+cmake --build . --target examples/hello_world/
+make hello_world_client hello_world_service
+
+
+
+export VSOMEIP_CONFIGURATION=/home/shree/abhi/vsomeip/examples/
+
+sudo route add -nv 224.224.224.245 dev ens33
+
+sudo route add -nv 224.224.224.245 dev wlan0
+
+192.168.1.13  -- vm
+192.168.1.11  -- raspi
+
+
+
