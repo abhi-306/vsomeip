@@ -1,0 +1,5 @@
+
+sudo docker build -t apline-vsomeip:1.01 .
+sudo docker image rmi -f b976e0f7e46a
+sudo docker image ls
+
